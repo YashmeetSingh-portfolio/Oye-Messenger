@@ -3,17 +3,18 @@ import { createContext, PropsWithChildren, useContext, useEffect, useState } fro
 import { supabase } from "../lib/supabase";
 
 type AuthContext = {
-    session: Session | null;
-    user: User| null | undefined;
+  session: Session | null;
+  user: User | null | undefined;
+  profile: any |null;
 }
-const AuthContext = createContext<AuthContext>({session:null, user:null});
+const AuthContext = createContext<AuthContext>({ session: null, user: null, profile: null });
 
-export default function AuthProvider({children}:PropsWithChildren) {
+export default function AuthProvider({ children }: PropsWithChildren) {
 
- const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState();
 
- 
-useEffect(() => {
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
     })
@@ -22,14 +23,35 @@ useEffect(() => {
     })
   }, [])
 
+  useEffect(() => {
+    if (!session?.user) {
+     
+      return
+      
+      
+      
+    };
+    const fetchProfile = async () => {
+      let { data, error } = await supabase
+        .from('profiles')
+        .select("*")
+        .eq('id', session?.user.id)
+        .single();
+      setProfile(data);  
 
-return(
-    <AuthContext.Provider value={{session, user:session?.user }}>
-  
-     {children}
-   
+    }
+    fetchProfile();
+
+  }, [session?.user])
+
+
+  return (
+    <AuthContext.Provider value={{ session, user: session?.user ,profile}}>
+
+      {children}
+
     </AuthContext.Provider>
-)
+  )
 
 }
 
