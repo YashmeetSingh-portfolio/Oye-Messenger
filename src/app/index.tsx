@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export default function ModalScreen() {
   return (
-  <Redirect href="/(home)/(tabs)" />
+  <Redirect href="/(auth)/login" />
   );
 }
 
