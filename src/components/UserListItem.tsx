@@ -1,12 +1,18 @@
-import React from 'react'
-import { Text, View } from 'react-native'
+import React from 'react';
+import { Text, View } from 'react-native';
 
-const UserListItem = ({user}) => {
+type User = {
+  id: string;
+  full_name: string;
+  avatar_url?: string | null;
+};
+
+const UserListItem = ({ user }: { user: User }) => {
   return (
-    <View style={{padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc'}}>
-      <Text style={{fontWeight: 600}}>{user.full_name}</Text>
+    <View style={{ padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
+      <Text style={{ fontWeight: '600' }}>{user.full_name}</Text>
     </View>
-  )
-}
+  );
+};
 
-export default UserListItem
+export default UserListItem;
