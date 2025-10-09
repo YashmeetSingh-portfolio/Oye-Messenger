@@ -6,6 +6,7 @@ export default function AuthLayout() {
 
     if(user){
         return <Redirect href="/(home)/" />;
+        
     }
     return (<Stack ></Stack>);
 

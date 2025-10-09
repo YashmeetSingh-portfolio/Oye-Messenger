@@ -12,16 +12,18 @@
       "supportsTablet": true
     },
     "android": {
-      
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.devyashmeet.OYE"
     },
     "web": {
       "output": "static",
@@ -40,11 +42,31 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "$(PRODUCT_NAME) would like to use your camera to share image in a message.",
+          "photosPermission": "$(PRODUCT_NAME) would like to use your device gallery to attach image in a message."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "490f8621-4d11-49e7-a541-17f3e95100a5"
+      }
     }
   }
 }

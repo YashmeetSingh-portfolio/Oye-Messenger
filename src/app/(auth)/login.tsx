@@ -1,7 +1,8 @@
-import { Button, Input } from '@rneui/themed'
-import React, { useState } from 'react'
-import { Alert, AppState, StyleSheet, View } from 'react-native'
-import { supabase } from '../../lib/supabase'
+import { Button, Input } from '@rneui/themed';
+import { Link } from 'expo-router'; // Import Link from expo-router
+import React, { useState } from 'react';
+import { Alert, AppState, StyleSheet, View } from 'react-native';
+import { supabase } from '../../lib/supabase';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
@@ -31,20 +32,7 @@ export default function Auth() {
     setLoading(false)
   }
 
-  async function signUpWithEmail() {
-    setLoading(true)
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    })
-
-    if (error) Alert.alert(error.message)
-    if (!session) Alert.alert('Please check your inbox for email verification!')
-    setLoading(false)
-  }
+ 
 
   return (
     <View style={styles.container}>
@@ -72,9 +60,15 @@ export default function Auth() {
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
       </View>
+      
+      {/* --- ADDED THIS SECTION --- */}
       <View style={styles.verticallySpaced}>
-        <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
+        <Link href="/signup" style={styles.signUpLink}>
+          Don't have an account? Sign up
+        </Link>
       </View>
+      {/* --------------------------- */}
+      
     </View>
   )
 }
@@ -92,4 +86,11 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
+  // --- ADDED THIS STYLE ---
+  signUpLink: {
+    color: '#007BFF', // A standard blue link color
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  // -------------------------
 })
