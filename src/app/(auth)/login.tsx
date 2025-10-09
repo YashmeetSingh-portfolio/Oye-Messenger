@@ -1,13 +1,12 @@
-import { Button, Input } from '@rneui/themed';
-import { Link } from 'expo-router'; // Import Link from expo-router
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, AppState, StyleSheet, View } from 'react-native';
+import { Alert, AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../../lib/supabase';
+// New Import: Using Ionicons for the icons
+import { Ionicons } from '@expo/vector-icons';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
-// the app is in the foreground. When this is added, you will continue to receive
-// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
-// if the user's session is terminated. This should only be registered once.
+// the app is in the foreground.
 AppState.addEventListener('change', (state) => {
   if (state === 'active') {
     supabase.auth.startAutoRefresh()
@@ -32,43 +31,62 @@ export default function Auth() {
     setLoading(false)
   }
 
- 
-
   return (
     <View style={styles.container}>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-          onChangeText={(text: React.SetStateAction<string>) => setEmail(text)}
-          value={email}
-          placeholder="email@address.com"
-          autoCapitalize={'none'}
-        />
+        {/* REPLACED RNE INPUT WITH RN VIEW/TEXT/TEXTINPUT */}
+        <Text style={styles.inputLabel}>Email</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons name="mail-outline" size={24} color="#666" style={styles.icon} />
+          <TextInput
+            onChangeText={(text) => setEmail(text)}
+            value={email}
+            placeholder="email@address.com"
+            autoCapitalize={'none'}
+            keyboardType="email-address"
+            style={styles.textInput}
+          />
+        </View>
       </View>
+
       <View style={styles.verticallySpaced}>
-        <Input
-          label="Password"
-          leftIcon={{ type: 'font-awesome', name: 'lock' }}
-          onChangeText={(text: React.SetStateAction<string>) => setPassword(text)}
-          value={password}
-          secureTextEntry={true}
-          placeholder="Password"
-          autoCapitalize={'none'}
-        />
+        {/* REPLACED RNE INPUT WITH RN VIEW/TEXT/TEXTINPUT */}
+        <Text style={styles.inputLabel}>Password</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed-outline" size={24} color="#666" style={styles.icon} />
+          <TextInput
+            onChangeText={(text) => setPassword(text)}
+            value={password}
+            secureTextEntry={true}
+            placeholder="Password"
+            autoCapitalize={'none'}
+            style={styles.textInput}
+          />
+        </View>
       </View>
+
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
+        {/* REPLACED RNE BUTTON WITH RN PRESSABLE */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            { opacity: pressed || loading ? 0.7 : 1 },
+            loading && styles.buttonDisabled,
+          ]}
+          onPress={signInWithEmail}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Loading...' : 'Sign in'}
+          </Text>
+        </Pressable>
       </View>
-      
-      {/* --- ADDED THIS SECTION --- */}
+
       <View style={styles.verticallySpaced}>
         <Link href="/signup" style={styles.signUpLink}>
           Don't have an account? Sign up
         </Link>
       </View>
-      {/* --------------------------- */}
-      
     </View>
   )
 }
@@ -86,11 +104,52 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
-  // --- ADDED THIS STYLE ---
   signUpLink: {
-    color: '#007BFF', // A standard blue link color
+    color: '#007BFF',
     textAlign: 'center',
     marginTop: 10,
   },
-  // -------------------------
+  
+  // --- NEW STYLES FOR NATIVE COMPONENTS ---
+
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+  },
+  icon: {
+    marginRight: 10,
+  },
+  textInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    paddingVertical: 10, // Added to ensure proper vertical alignment
+  },
+  button: {
+    backgroundColor: '#007BFF', // Primary button color
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 45,
+  },
+  buttonDisabled: {
+    backgroundColor: '#a0c7ff', // Lighter shade for disabled state
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 })
