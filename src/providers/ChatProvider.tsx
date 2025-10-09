@@ -3,6 +3,7 @@ import { ActivityIndicator } from "react-native";
 import { StreamChat } from "stream-chat";
 import { Chat, OverlayProvider } from "stream-chat-expo";
 import { supabase } from "../lib/supabase";
+import { tokenProvider } from "../utils/tokenProvider";
 import { useAuth } from "./AuthProvider";
 
 export default function ChatProvider({ children }: PropsWithChildren) {
@@ -14,6 +15,11 @@ export default function ChatProvider({ children }: PropsWithChildren) {
         if (!profile) { return; }
 
         const connect = async () => {
+            
+
+            const token = await tokenProvider();
+            console.log("Token:", token);
+
             await client.connectUser(
                 {
                     id: profile?.id!,
@@ -22,7 +28,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
                         ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
                         : 'https://your-app.com/default-avatar.png',
                 },
-                client.devToken(profile?.id!),
+                tokenProvider,
             );
             setIsReady(true);
             // const channel = client.channel("messaging", "the_park", {
