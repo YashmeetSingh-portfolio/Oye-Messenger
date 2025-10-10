@@ -30,7 +30,12 @@ export default function UsersScreen() {
     return (
         <FlatList
             data={users}
-            contentContainerStyle={{ gap: 5 }}
+            // IMPORTANT: Remove 'gap' here since spacing is handled by UserListItem's cardWrapper padding
+            contentContainerStyle={{ 
+                paddingTop: 10, 
+                paddingBottom: 20, 
+                backgroundColor: '#f4f4f4' // Light grey background for the whole screen
+            }}
             renderItem={({ item }) => <UserListItem user={item} />}
         />
     );
