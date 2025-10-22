@@ -83,26 +83,7 @@ export default function MainTabScreen() {
 
 
 
-                {/* <Stack.Screen
-                options={{
-                    headerRight: () => (
-                        <Link href="/(home)/users" asChild>
-                            <FontAwesome5
-                                name="users"
-                                size={24}
-                                color="gray"
-                                style={{ marginHorizontal: 15 }}
-                            />
-                        </Link>
-                    ),
-                }}
-            /> */}
-                {/* {user && (
-                    <ChannelList
-                        filters={{ members: { $in: [user.id] } }}
-                        onSelect={(channel) => router.push(`/channel/${channel.cid}`)}
-                    />
-                )} */}
+              
             </View>
             <View style={styles.chatListContainer}>
                 <View style={styles.barContainer}>      <SvgXml xml={MyRectangleSvg} />

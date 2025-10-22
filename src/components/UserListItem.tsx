@@ -20,10 +20,7 @@ const UserListItem = ({ user }: { user: User }) => {
       members: [me?.id!, user.id],
     });
     await channel.watch();
-    router.navigate({
-      pathname: '/(home)/channel/[cid]',
-      params: { cid: channel.cid },
-    });
+    router.push(`/channel/${channel.cid}`);
   };
 
   return (

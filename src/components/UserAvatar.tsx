@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
@@ -12,21 +12,23 @@ export default function UserAvatar({ url, size = 50 }: Props) {
   const avatarSize = { height: size, width: size };
 
   useEffect(() => {
-    if (url) {
-      downloadImage(url);
+    if (!url) {
+      setAvatarUrl(null);
+      return;
+    }
+    if (url.startsWith('http')) {
+      setAvatarUrl(url);
     } else {
-      setAvatarUrl(null); // Clear if URL is missing
+      downloadImage(url);
     }
   }, [url]);
 
   async function downloadImage(path: string) {
     try {
       const { data, error } = await supabase.storage.from('avatars').download(path);
-
       if (error) {
         throw error;
       }
-
       const fr = new FileReader();
       fr.readAsDataURL(data);
       fr.onload = () => {
@@ -36,7 +38,7 @@ export default function UserAvatar({ url, size = 50 }: Props) {
       if (error instanceof Error) {
         console.log('Error downloading image for list item: ', error.message);
       }
-      setAvatarUrl(null); // Ensure no broken state on error
+      setAvatarUrl(null);
     }
   }
 

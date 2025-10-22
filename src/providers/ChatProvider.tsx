@@ -71,15 +71,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
         <OverlayProvider
             value={{
                 style: {
-                    channelList: {
-                        container: {
-                            
-                           
-                        },
-                        listContainer: {
-                        
-                    },
-                    },
+                   
                     channelPreview: {
                         container: {
                             backgroundColor: 'white', // ✅ white preview
@@ -90,6 +82,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
             }}
         >
             <Chat client={client}>
+                
                 {children}
             </Chat>
         </OverlayProvider>
