@@ -12,38 +12,54 @@ export default function ChatProvider({ children }: PropsWithChildren) {
     const { profile } = useAuth();
 
     useEffect(() => {
-        if (!profile) { return; }
+        if (!profile) return;
+
+        let isMounted = true;
 
         const connect = async () => {
-            
+            try {
+                if (client.userID && client.userID !== profile.id) {
+                    console.log("Disconnecting previous user...");
+                    await client.disconnectUser();
+                }
 
-            const token = await tokenProvider();
-            console.log("Token:", token);
+                if (client.userID === profile.id) {
+                    console.log("Already connected as this user");
+                    setIsReady(true);
+                    return;
+                }
 
-            await client.connectUser(
-                {
-                    id: profile?.id!,
-                    name: profile.full_name,
-                    image: profile?.avatar_url
-                        ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
-                        : 'https://your-app.com/default-avatar.png',
-                },
-                tokenProvider,
-            );
-            setIsReady(true);
-            // const channel = client.channel("messaging", "the_park", {
-            //     name: "The Park",
-            // });
-            // await channel.watch();
+                const token = await tokenProvider();
+                console.log("Token:", token);
+
+                await client.connectUser(
+                    {
+                        id: profile.id,
+                        name: profile.full_name,
+                        image: profile?.avatar_url
+                            ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_url).data.publicUrl
+                            : "https://your-app.com/default-avatar.png",
+                    },
+                    token
+                );
+
+                if (isMounted) setIsReady(true);
+            } catch (err) {
+                console.error("Error connecting user:", err);
+            }
         };
+
         connect();
 
         return () => {
-            if (isReady)
-                client.disconnectUser();
+            isMounted = false;
+            if (client.userID) {
+                client.disconnectUser().catch(console.error);
+            }
             setIsReady(false);
         };
     }, [profile?.id]);
+
 
     useEffect(() => { });
 
@@ -52,7 +68,27 @@ export default function ChatProvider({ children }: PropsWithChildren) {
     }
 
     return (
-        <OverlayProvider>
+        <OverlayProvider
+            value={{
+                style: {
+                    channelList: {
+                        container: {
+                            
+                           
+                        },
+                        listContainer: {
+                        
+                    },
+                    },
+                    channelPreview: {
+                        container: {
+                            backgroundColor: 'white', // ✅ white preview
+                            borderBottomWidth: 0, // ✅ remove divider
+                        },
+                    },
+                },
+            }}
+        >
             <Chat client={client}>
                 {children}
             </Chat>

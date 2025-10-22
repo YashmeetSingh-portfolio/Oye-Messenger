@@ -1,27 +1,29 @@
 import AvatarDisplay from '@/src/components/AvatarDisplay';
+import UserListItem from '@/src/components/UserListItem';
 import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/providers/AuthProvider';
-import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import type { Channel } from 'stream-chat';
-import { ChannelList } from 'stream-chat-expo';
 
+type Profile = {
+    id: string;
+    full_name: string;
+    avatar_url?: string | null;
+    [key: string]: any;
+};
 
-export default function MainTabScreen() {
-    const { session } = useAuth();
+export default function UsersScreen() {
+    const { session, user } = useAuth();
     const [loading, setLoading] = useState(true);
-
-    const [channel, setChannel] = useState<Channel | null>(null);
-    const { user } = useAuth();
+    const [users, setUsers] = useState<Profile[]>([]);
     const [avatarUrl, setAvatarUrl] = useState('');
-    const MyRectangleSvg = `
-<svg width="30" height="3" viewBox="0 0 30 3" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="30" height="3" rx="1.5" fill="#E6E6E6"/>
-</svg>
-`;
 
+    const MyRectangleSvg = `
+  <svg width="30" height="3" viewBox="0 0 30 3" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="30" height="3" rx="1.5" fill="#E6E6E6"/>
+  </svg>
+  `;
 
     async function getProfile() {
         try {
@@ -33,94 +35,70 @@ export default function MainTabScreen() {
                 .select(`avatar_url`)
                 .eq('id', session?.user.id)
                 .single();
-            if (error && status !== 406) {
-                throw error;
-            }
 
-            if (data) {
-
-                setAvatarUrl(data.avatar_url);
-
-            }
+            if (error && status !== 406) throw error;
+            if (data) setAvatarUrl(data.avatar_url);
         } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message);
-            }
+            if (error instanceof Error) Alert.alert(error.message);
         } finally {
             setLoading(false);
         }
     }
 
     useEffect(() => {
-        if (session) {
-            getProfile();
-        }
+        if (session) getProfile();
     }, [session]);
 
+    useEffect(() => {
+        const fetchUsers = async () => {
+            const { data: profiles, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .neq('id', user?.id); // exclude current user
+
+            if (profiles) setUsers(profiles);
+        };
+        fetchUsers();
+    }, []);
 
     return (
         <View style={styles.screen}>
+            {/* Header Section */}
             <View style={styles.container}>
                 <View style={styles.headerContainer}>
                     <View style={styles.searchIconContainer}>
                         <Image
-
                             source={require('../../../../assets/images/SearchIcon.png')}
                             style={styles.SearchIcon}
                         />
-
                     </View>
-                    <Text style={styles.title} >Home</Text>
+                    <Text style={styles.title}>Users</Text>
                     <View style={styles.avatarContainer}>
                         <AvatarDisplay size={46} url={avatarUrl} />
                     </View>
-
-
-
-
                 </View>
-
-
-
-
-                {/* <Stack.Screen
-                options={{
-                    headerRight: () => (
-                        <Link href="/(home)/users" asChild>
-                            <FontAwesome5
-                                name="users"
-                                size={24}
-                                color="gray"
-                                style={{ marginHorizontal: 15 }}
-                            />
-                        </Link>
-                    ),
-                }}
-            /> */}
-                {/* {user && (
-                    <ChannelList
-                        filters={{ members: { $in: [user.id] } }}
-                        onSelect={(channel) => router.push(`/channel/${channel.cid}`)}
-                    />
-                )} */}
             </View>
-            <View style={styles.chatListContainer}>
-                <View style={styles.barContainer}>      <SvgXml xml={MyRectangleSvg} />
+
+            {/* Users List Section */}
+            <View style={styles.listContainer}>
+                <View style={styles.barContainer}>
+                    <SvgXml xml={MyRectangleSvg} />
                 </View>
 
-                {user && (
-                    <ChannelList
-
-                        filters={{ members: { $in: [user.id] } }}
-                        onSelect={(channel) => router.push(`/channel/${channel.cid}`)}
-                    />
-                )}
-
-
+                <FlatList
+                    data={users}
+                    
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <UserListItem user={item} />}
+                    contentContainerStyle={{
+                        paddingBottom: 20,
+                    }}
+                />
             </View>
         </View>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
@@ -134,25 +112,19 @@ const styles = StyleSheet.create({
         top: 61,
         left: 18,
         flexDirection: 'row',
-
     },
     screen: {
         flex: 1,
-        backgroundColor: 'black'
+        backgroundColor: 'black',
     },
     searchIconContainer: {
         width: 44,
         height: 44,
-
-
         borderWidth: 2,
         borderColor: '#363F3B',
         borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
-
-
-
     },
     SearchIcon: {
         width: 24,
@@ -168,9 +140,8 @@ const styles = StyleSheet.create({
         height: 46,
         borderRadius: 22,
         backgroundColor: '#363F3B',
-
     },
-    chatListContainer: {
+    listContainer: {
         position: 'absolute',
         height: '90%',
         backgroundColor: '#ffffffff',
@@ -179,20 +150,10 @@ const styles = StyleSheet.create({
         left: 0,
         borderRadius: 40,
         paddingTop: 20,
-        paddingHorizontal: 20,
-
+        paddingHorizontal: 18,
     },
     barContainer: {
         alignItems: 'center',
         marginBottom: 20,
-       
-        
     },
-
-
-
-
 });
-
-
-
