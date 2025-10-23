@@ -29,15 +29,18 @@ export default function UserAvatar({ url, size = 50 }: Props) {
       if (error) {
         throw error;
       }
+
       const fr = new FileReader();
       fr.readAsDataURL(data);
       fr.onload = () => {
         setAvatarUrl(fr.result as string);
       };
+
     } catch (error) {
       if (error instanceof Error) {
         console.log('Error downloading image for list item: ', error.message);
       }
+
       setAvatarUrl(null);
     }
   }
@@ -60,7 +63,7 @@ export default function UserAvatar({ url, size = 50 }: Props) {
 const styles = StyleSheet.create({
   image: {
     objectFit: 'cover',
-    borderRadius: 25, // For a nice circular avatar
+    borderRadius: 25,
   },
   noImage: {
     backgroundColor: '#ccc',

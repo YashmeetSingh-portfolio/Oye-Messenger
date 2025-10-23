@@ -5,4 +5,4 @@ export default function ChannelStack() {
         <Stack.Screen name ="[cid]" options={{headerShown: false}} />
 
     </Stack>;
-}
+}   
