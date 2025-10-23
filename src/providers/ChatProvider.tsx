@@ -17,8 +17,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
         let isMounted = true;
 
         const connect = async () => {
-            console.log(profile.id)
-            console.log(await tokenProvider())
+            
             try {
                 if (client.userID && client.userID !== profile.id) {
                     console.log("Disconnecting previous user...");
