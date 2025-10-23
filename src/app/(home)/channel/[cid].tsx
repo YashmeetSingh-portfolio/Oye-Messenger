@@ -1,11 +1,19 @@
 import UserAvatar from '@/src/components/UserAvatar';
 import { useAuth } from '@/src/providers/AuthProvider';
 import { Ionicons } from '@expo/vector-icons'; // or any icon library you're using
+import { useStreamVideoClient } from '@stream-io/video-react-native-sdk';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Channel as ChannelType } from 'stream-chat';
 import { Channel, MessageInput, MessageList, useChatContext } from 'stream-chat-expo';
+
+
+import * as Crypto from 'expo-crypto';
+
+
+
+
 
 export default function ChannelScreen() {
     const [channel, setChannel] = useState<ChannelType | null>(null);
@@ -14,7 +22,7 @@ export default function ChannelScreen() {
     const { cid } = useLocalSearchParams<{cid: string}>();
     const { client } = useChatContext();
     const { user: me } = useAuth();
-
+    const videoClient = useStreamVideoClient();
     useEffect(() => {
         const fetchChannel = async () => {
             const channels = await client.queryChannels({ cid });
@@ -30,6 +38,20 @@ export default function ChannelScreen() {
         };
         fetchChannel();
     }, [cid, me?.id]);
+
+    const joinCall = async() => {
+        
+        const members = Object.values(channel?.state.members).map(member => ({user_id: member.user.id}));
+        const call = videoClient.call('default', Crypto.randomUUID());
+        await call.getOrCreate({
+            data:{
+                members:members,
+            },
+        });
+
+        router.push('/call');
+        
+    }
 
     const CustomHeader = () => (
         <View style={styles.header}>
@@ -57,7 +79,7 @@ export default function ChannelScreen() {
                     </View>
                 </View>
                 <View style={styles.headerRight}>
-                    {/* coming soon! */}
+                    <Ionicons name="call" size={24} color="gray" style={{ marginRight: 20 }} onPress={joinCall}/>
                 </View>
                 <View style={styles.placeholder} />
             </View>
@@ -95,10 +117,11 @@ export default function ChannelScreen() {
 const styles = StyleSheet.create({
     
     headerContent:{
-        width: 327,
+        width: 387,
         height: 44,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         
 
 

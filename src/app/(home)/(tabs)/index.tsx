@@ -1,7 +1,7 @@
 import AvatarDisplay from '@/src/components/AvatarDisplay';
 import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/providers/AuthProvider';
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -61,7 +61,7 @@ export default function MainTabScreen() {
 
     return (
         <View style={styles.screen}>
-            <Redirect href="/(home)/call" />
+          
             <View style={styles.container}>
                 <View style={styles.headerContainer}>
                     <View style={styles.searchIconContainer}>
