@@ -44,7 +44,17 @@
           }
         }
       ],
+      [
        "@stream-io/video-react-native-sdk",
+      {
+        "ringingPushNotifications": {
+          "disableVideoIos": false,
+          "includesCallsInRecentsIos": true,
+          "showWhenLockedAndroid": true
+        },
+        "enableNonRingingPushNotifications": true
+      }
+       ],
         [
         "@config-plugins/react-native-webrtc",
         {
@@ -80,7 +90,9 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "@config-plugins/react-native-callkeep",
+
     ],
     "experiments": {
       "typedRoutes": true,
