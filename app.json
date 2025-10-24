@@ -20,6 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
@@ -77,7 +78,9 @@
           "cameraPermission": "$(PRODUCT_NAME) would like to use your camera to share image in a message.",
           "photosPermission": "$(PRODUCT_NAME) would like to use your device gallery to attach image in a message."
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -3,6 +3,7 @@
 import { useAuth } from "@/src/providers/AuthProvider";
 import CallProvider from "@/src/providers/CallProvider";
 import ChatProvider from "@/src/providers/ChatProvider";
+import NotificationsProvider from "@/src/providers/NotificationsProvider";
 import VideoProvider from "@/src/providers/VideoProvider";
 import { Redirect, Stack } from "expo-router";
 import React from "react";
@@ -14,8 +15,9 @@ export default function HomeLayout() {
     }
    
     return (
-        
+             
                 <ChatProvider>
+                     <NotificationsProvider>
                     <VideoProvider>
                         <CallProvider>
 
@@ -25,7 +27,9 @@ export default function HomeLayout() {
                     </Stack>
                         </CallProvider>
                     </VideoProvider>
+                       </NotificationsProvider>
                 </ChatProvider>
+             
 
             
     );
