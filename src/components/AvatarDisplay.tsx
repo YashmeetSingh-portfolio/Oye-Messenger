@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
@@ -34,7 +34,11 @@ export default function AvatarDisplay({url, size=40}: Props) {
               style={[avatarSize, styles.avatar]}
             />
           ) : (
-            <View style={[avatarSize, styles.placeholder]} />
+            <View style={[avatarSize, styles.avatarDummyContainer]}>
+           <Image
+              source={require("../../assets/images/user.png")}
+              style={[avatarSize, styles.avatar]} />
+           </View>
           )}
           </>
       );
@@ -52,5 +56,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#363F3B',
+  },
+  avatarDummyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#7b7b7bff',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#7b7b7bff',
   },
 })

@@ -16,7 +16,8 @@ export default function MainTabScreen() {
 
     const [channel, setChannel] = useState<Channel | null>(null);
     const { user } = useAuth();
-    const [avatarUrl, setAvatarUrl] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState(null);
+    
     const MyRectangleSvg = `
 <svg width="30" height="3" viewBox="0 0 30 3" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="30" height="3" rx="1.5" fill="#E6E6E6"/>
@@ -24,39 +25,30 @@ export default function MainTabScreen() {
 `;
 
 
-    async function getProfile() {
-        try {
-            setLoading(true);
-            if (!session?.user) throw new Error('No user on the session!');
-
-            const { data, error, status } = await supabase
-                .from('profiles')
-                .select(`avatar_url`)
-                .eq('id', session?.user.id)
-                .single();
-            if (error && status !== 406) {
-                throw error;
-            }
-
-            if (data) {
-
-                setAvatarUrl(data.avatar_url);
-
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message);
-            }
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        if (session) {
-            getProfile();
-        }
-    }, [session]);
+   async function getProfile() {
+          try {
+              setLoading(true);
+              if (!session?.user) throw new Error('No user on the session!');
+  
+              const { data, error, status } = await supabase
+                  .from('profiles')
+                  .select(`avatar_url`)
+                  .eq('id', session?.user.id)
+                  .single();
+  
+              if (error && status !== 406) throw error;
+              if (data) setAvatarUrl(data.avatar_url);
+          } catch (error) {
+              if (error instanceof Error) Alert.alert(error.message);
+          } finally {
+              setLoading(false);
+          }
+      }
+  
+      useEffect(() => {
+          if (session) getProfile();
+      }, [session]);
+  
  
 
     return (
@@ -73,9 +65,9 @@ export default function MainTabScreen() {
 
                     </View>
                     <Text style={styles.title} >Home</Text>
-                    <View style={styles.avatarContainer}>
-                        <AvatarDisplay size={46} url={avatarUrl} />
-                    </View>
+                   <View style={styles.avatarContainer}>
+                                           <AvatarDisplay size={46} url={avatarUrl} />
+                                       </View>
 
 
 

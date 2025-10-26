@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, Image, Pressable, StyleSheet, View } from 'react-native'
 import { supabase } from '../lib/supabase'
 
@@ -66,8 +66,11 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
           source={{ uri: avatarUrl }}
           style={[avatarSize, styles.avatar]}
         />
-      ) : (
-        <View style={[avatarSize, styles.placeholder]} />
+      ) : (<View style={[avatarSize, styles.avatarDummyContainer]}>
+                 <Image
+                    source={require("../../assets/images/user.png")}
+                    style={[avatarSize, styles.avatar]} />
+                 </View>
       )}
     </Pressable>
   )
@@ -85,5 +88,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#363F3B',
+  },
+   avatarDummyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    
+    borderRadius: 999,
+    borderWidth: 1,
+    
   },
 })

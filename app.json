@@ -45,20 +45,19 @@
         }
       ],
       [
-       "@stream-io/video-react-native-sdk",
-      {
-        "ringingPushNotifications": {
-          "disableVideoIos": false,
-          "includesCallsInRecentsIos": true,
-          "showWhenLockedAndroid": true
-        },
-        "enableNonRingingPushNotifications": true
-      }
-       ],
-        [
+        "@stream-io/video-react-native-sdk",
+        {
+          "ringingPushNotifications": {
+            "disableVideoIos": false,
+            "includesCallsInRecentsIos": true,
+            "showWhenLockedAndroid": true
+          },
+          "enableNonRingingPushNotifications": true
+        }
+      ],
+      [
         "@config-plugins/react-native-webrtc",
         {
-          // add your explanations for camera and microphone
           "cameraPermission": "$(PRODUCT_NAME) requires camera access in order to capture and transmit video",
           "microphonePermission": "$(PRODUCT_NAME) requires microphone access in order to capture and transmit audio"
         }
@@ -71,7 +70,6 @@
               "$rootDir/../../../node_modules/@notifee/react-native/android/libs"
             ],
             "minSdkVersion": 24
-            
           }
         }
       ],
@@ -92,7 +90,7 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       "@config-plugins/react-native-callkeep",
-
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

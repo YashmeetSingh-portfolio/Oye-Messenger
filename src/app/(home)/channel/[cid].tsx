@@ -1,19 +1,13 @@
 import UserAvatar from '@/src/components/UserAvatar';
 import { useAuth } from '@/src/providers/AuthProvider';
-import { Ionicons } from '@expo/vector-icons'; // or any icon library you're using
+import { Ionicons } from '@expo/vector-icons';
 import { useStreamVideoClient } from '@stream-io/video-react-native-sdk';
+import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Channel as ChannelType } from 'stream-chat';
 import { Channel, MessageInput, MessageList, useChatContext } from 'stream-chat-expo';
-
-
-import * as Crypto from 'expo-crypto';
-
-
-
-
 
 export default function ChannelScreen() {
     const [channel, setChannel] = useState<ChannelType | null>(null);
@@ -23,13 +17,13 @@ export default function ChannelScreen() {
     const { client } = useChatContext();
     const { user: me } = useAuth();
     const videoClient = useStreamVideoClient();
+
     useEffect(() => {
         const fetchChannel = async () => {
             const channels = await client.queryChannels({ cid });
             const ch = channels[0];
             setChannel(ch);
             if (ch) {
-                // Find the other member (not me)
                 const members = Object.values(ch.state.members || {});
                 const other = members.find((m: any) => m.user?.id !== me?.id)?.user;
                 setOtherUser(other);
@@ -49,15 +43,12 @@ export default function ChannelScreen() {
                 members:members,
             },
         });
-       
-
-        // router.push(`/call/${call.id}`);
-        
     }
 
     const CustomHeader = () => (
         <View style={styles.header}>
             <View style={styles.headerContent}>
+                {/* Header Left: Takes up most space and contains the user details */}
                 <View style={styles.headerLeft}>
                     <TouchableOpacity 
                         style={styles.backButton}
@@ -67,11 +58,15 @@ export default function ChannelScreen() {
                     </TouchableOpacity>
                     <View style={styles.ChannelDetails}>
                         <View style={styles.avatarStatusWrapper}>
-                            <UserAvatar url={otherUser?.avatar_url || otherUser?.image} size={44} />
+                            <UserAvatar url={otherUser?.avatar_url} size={44} />
                             <View style={[styles.statusDot, { backgroundColor: isOnline ? '#4cd137' : '#b2bec3' }]} />
                         </View>
-                        <View>
-                            <Text style={styles.headerTitle}>
+                        <View style={styles.nameAndStatusWrapper}>
+                            <Text 
+                                style={styles.headerTitle}
+                                numberOfLines={1} // 👈 Enforce single line
+                                ellipsizeMode='tail' // 👈 Truncate with "..."
+                            >
                                 {otherUser?.full_name || otherUser?.name || 'Chat'}
                             </Text>
                             <Text style={styles.statusText}>
@@ -80,10 +75,10 @@ export default function ChannelScreen() {
                         </View>
                     </View>
                 </View>
+                {/* Header Right: Fixed size for the call button */}
                 <View style={styles.headerRight}>
                     <Ionicons name="call" size={24} color="gray" style={{ marginRight: 20 }} onPress={joinCall}/>
                 </View>
-                <View style={styles.placeholder} />
             </View>
         </View>
     );
@@ -98,7 +93,6 @@ export default function ChannelScreen() {
             <View style={{ flex: 1 }}>
                 <Channel 
                     channel={channel}
-                    // Disable the default header
                 >
                     <KeyboardAvoidingView
                         style={{ flex: 1 }}
@@ -119,26 +113,31 @@ export default function ChannelScreen() {
 const styles = StyleSheet.create({
     
     headerContent:{
-        width: 387,
+        // ❌ Removed fixed width: width: 387,
+        flex: 1, // 👈 Added flex: 1 for responsiveness
         height: 44,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        
-
-
-
     },
     ChannelDetails:{
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        // Make ChannelDetails flexible to push name truncation
+        flex: 1, 
+        overflow: 'hidden', // Needed for text truncation within flexible view
     },
     avatarStatusWrapper: {
         position: 'relative',
-        marginRight: 10,
+        // ❌ Removed redundant marginRight: 10 as it's handled by gap: 10 on ChannelDetails
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    nameAndStatusWrapper: {
+        // 👈 New style to ensure the name section is flexible
+        flex: 1,
+        overflow: 'hidden',
     },
     statusDot: {
         position: 'absolute',
@@ -154,22 +153,24 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 13,
         color: '#888',
-        marginLeft: 5,
+        marginLeft: 3, // Changed from 5 to 3 to align better with title
         marginTop: 2,
     },
     headerLeft:{
         flexDirection: 'row',
         alignItems: 'center',
-       
-        width: '60%',
-       
+        flex: 1, // 👈 Ensures headerLeft takes up all available horizontal space
+        // ❌ Removed fixed width: width: '60%',
+        overflow: 'hidden', // Ensures content inside doesn't spill over
     },
-    headerRight:{},
+    headerRight:{
+        // No changes needed here, as headerLeft will take up the rest of the space
+    },
 
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center', // Changed to center to ensure headerContent is centered
         paddingHorizontal: 16,
         paddingTop: 60,
         paddingBottom: 16,
@@ -177,8 +178,7 @@ const styles = StyleSheet.create({
         height: 124,
         borderBottomWidth: 1,
         borderBottomColor: '#ffffffff',
-        boxShadow: '2px 4px 4px rgba(0, 0, 0, 0.48)',
-
+        // boxShadow property for web/iOS - typically handled by elevation/shadow properties on RN mobile
     },
     AvatarFrame:{
         width:44,
@@ -189,16 +189,18 @@ const styles = StyleSheet.create({
     },
     backButton: {
         padding: 8,
-        marginRight: 15,
+        marginRight: 10, // Adjusted for better spacing
     },
     headerTitle: {
         color: 'black',
         fontSize: 18,
         fontWeight: 'bold',
-        marginLeft: 3,
+        marginLeft: 3, // Adjusted from 3 for consistency
+        // Note: Truncation props are applied directly in the component (numberOfLines, ellipsizeMode)
     },
     placeholder: {
-        width: 40, // Same as back button for balance
+        // Not needed anymore since headerRight is fixed and headerContent uses space-between
+        width: 0, 
     },
     chatContainer: {
         flex: 1,

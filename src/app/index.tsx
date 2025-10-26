@@ -3,10 +3,12 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 
 export default function ModalScreen() {
+   
   return (
-  <Redirect href="/(auth)/login" />
+  <Redirect href="/(auth)/" />
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

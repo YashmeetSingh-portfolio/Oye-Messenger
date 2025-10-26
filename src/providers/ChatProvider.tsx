@@ -39,7 +39,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
                         name: profile.full_name,
                         image: profile?.avatar_url
                             ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_url).data.publicUrl
-                            : "https://your-app.com/default-avatar.png",
+                            : "https://zsdlhvykwidbmniocezf.supabase.co/storage/v1/object/public/avatars/default.png",
                     },
                     token
                 );

@@ -1,5 +1,6 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Tabs } from "expo-router";
+import React from 'react';
 import { Text } from 'react-native';
 export default function TabsNavigator(){
         const TAB_BAR_HEIGHT = 90;

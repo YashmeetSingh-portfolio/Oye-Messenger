@@ -1,318 +1,337 @@
-import { useAuth } from '@/src/providers/AuthProvider';
-import React, { useEffect, useState } from 'react';
-import { Alert, AppState, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-// New Import for icons
-import { Ionicons } from '@expo/vector-icons';
-import Avatar from '../../components/Avatar';
+import { FontAwesome6, Ionicons } from '@expo/vector-icons';
+import { Link, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Alert,
+  AppState,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { supabase } from '../../lib/supabase';
 
-// ... (AppState listener and getProfile function remain the same)
+const HORIZONTAL_PADDING = 32;
+const ACTIVE_BUTTON_COLOR_LIGHT = '#008C77';
+const ACTIVE_BUTTON_COLOR_DARK = '#66C2A4';
+const INACTIVE_BUTTON_COLOR_LIGHT = '#F4F4F4';
+const INACTIVE_BUTTON_COLOR_DARK = '#1E1E1E';
+const ERROR_COLOR = '#D32F2F';
+
+const validateEmail = (email: string) => {
+  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return re.test(String(email).toLowerCase());
+};
+
 AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-        supabase.auth.startAutoRefresh();
-    } else {
-        supabase.auth.stopAutoRefresh();
-    }
+  if (state === 'active') supabase.auth.startAutoRefresh();
+  else supabase.auth.stopAutoRefresh();
 });
 
-export default function CreateAccount() {
-    const { session } = useAuth();
-    // ... State variables remain the same
-    const [username, setUsername] = useState('');
-    const [fullName, setFullname] = useState('');
-    const [website, setWebsite] = useState('');
-    const [avatarUrl, setAvatarUrl] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+export default function Signup() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
-    // ... useEffect and updateProfile/signUpWithEmail functions remain the same
-    useEffect(() => {
-        if (session) getProfile();
-    }, [session]);
-    
-    // ... (updateProfile function here, identical to your original code)
-    async function updateProfile({
-        username,
-        website,
-        avatar_url,
-        full_name,
-        userId, // Added for sign-up flow
-    }: {
-        username: string
-        website: string
-        avatar_url: string
-        full_name: string
-        userId?: string
-    }) {
-        try {
-            setLoading(true)
-            
-            // Prioritize the ID passed from the signUp flow, otherwise use the session ID
-            const idToUse = userId || session?.user?.id; 
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  // Removed avatar state and logic
+  const [loading, setLoading] = useState(false);
 
-            if (!idToUse) {
-                // This shouldn't happen if called correctly
-                throw new Error('No user ID available for profile operation!')
-            }
+  const [showPassword, setShowPassword] = useState(false);
+  // Corrected the state setter function for showConfirmPass to setShowConfirmPass
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
-            const updates = {
-                id: idToUse,
-                username,
-                website,
-                avatar_url,
-                full_name,
-                updated_at: new Date(),
-            }
+  const isEmailInvalid = email.length > 0 && !validateEmail(email);
+  const passwordsDontMatch = confirmPass.length > 0 && password !== confirmPass;
 
-            // Using upsert is generally safe for profile data whether it's an initial insert or an update
-            const { error } = await supabase.from('profiles').upsert(updates) 
+  const isFormValid =
+    name.length > 0 &&
+    email.length > 0 &&
+    !isEmailInvalid &&
+    password.length >= 6 &&
+    confirmPass.length >= 6 &&
+    !passwordsDontMatch;
 
-            if (error) {
-                // The most common error here is RLS
-                console.error("Supabase Profile Update Error:", error);
-                throw error
-            }
+  const buttonBgColor = isFormValid
+    ? isDark ? ACTIVE_BUTTON_COLOR_DARK : ACTIVE_BUTTON_COLOR_LIGHT
+    : isDark ? INACTIVE_BUTTON_COLOR_DARK : INACTIVE_BUTTON_COLOR_LIGHT;
 
-            // ONLY FOR DEBUGGING: This alert confirms the DB call finished without error
-            // Alert.alert('Profile operation successful (check DB)!') 
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert("Profile Update Failed: " + error.message)
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-        
-    // ... (signUpWithEmail function here, identical to your original code)
-    async function signUpWithEmail() {
-        setLoading(true)
-        const {
-            data: { session: newSession, user: newUser },
-            error,
-        } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        })
+  const buttonTextColor = isFormValid
+    ? isDark ? '#000' : '#fff'
+    : isDark ? '#777' : '#999';
 
-        if (error) {
-            Alert.alert(error.message)
-            setLoading(false)
-            return
-        }
-
-        // If a session and user are immediately available (Email Confirmation OFF)
-        if (newSession && newUser) {
-            // Wait for the profile update to complete
-            await updateProfile({ 
-                username, 
-                website, 
-                avatar_url: avatarUrl, 
-                full_name: fullName, 
-                userId: newUser.id 
-            }) 
-            
-            // The loading state will be set to false in updateProfile's finally block
-            // and the app will likely navigate to the homepage due to the new session state.
-        } else {
-            // If no session is returned (Email Confirmation ON)
-            Alert.alert('Please check your inbox for email verification!')
-            setLoading(false)
-            // Profile must be created after user verifies and logs in, or via a Database Trigger
-        }
+  async function handleSignUp() {
+    if (!isFormValid) {
+      Alert.alert('Validation Error', 'Please ensure all fields are filled correctly and passwords match.');
+      return;
     }
 
-    return (
-        <ScrollView style={styles.container}>
-            {/* RNE Input replaced with custom InputField View */}
-            <InputField
-                label="Email"
-                iconName="mail-outline"
-                onChangeText={setEmail}
-                value={email}
-                placeholder="email@address.com"
-                autoCapitalize={'none'}
-            />
-            {/* RNE Input replaced with custom InputField View */}
-            <InputField
-                label="Password"
-                iconName="lock-closed-outline"
-                onChangeText={setPassword}
-                value={password}
-                secureTextEntry={true}
-                placeholder="Password"
-                autoCapitalize={'none'}
-            />
+    setLoading(true);
 
-            <View style={{ alignItems: 'center' }}>
-                <Avatar
-                    size={200}
-                    url={avatarUrl}
-                    onUpload={(url: string) => {
-                        setAvatarUrl(url)
-                        if (session) {
-                            updateProfile({ username, website, avatar_url: url, full_name: fullName })
-                        }
-                    }}
-                />
-            </View>
-            
-            {/* RNE Input replaced with custom InputField View (Disabled) */}
-            <InputField 
-                label="Email" 
-                value={session?.user?.email} 
-                disabled 
-            />
-            {/* RNE Input replaced with custom InputField View */}
-            <InputField 
-                label="Full Name" 
-                value={fullName || ''} 
-                onChangeText={setFullname} 
-            />
-            {/* RNE Input replaced with custom InputField View */}
-            <InputField 
-                label="Username" 
-                value={username || ''} 
-                onChangeText={setUsername} 
-            />
-            {/* RNE Input replaced with custom InputField View */}
-            <InputField 
-                label="Website" 
-                value={website || ''} 
-                onChangeText={setWebsite} 
-            />
+    // 1. Sign up the user
+    const {
+      data: { user: newUser },
+      error: signUpError,
+    } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-            {/* RNE Button replaced with Pressable */}
-            <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Pressable
-                    style={({ pressed }) => [
-                        styles.button,
-                        { opacity: pressed || loading ? 0.7 : 1 },
-                        loading && styles.buttonDisabled,
-                    ]}
-                    onPress={signUpWithEmail}
-                    disabled={loading}
-                >
-                    <Text style={styles.buttonText}>
-                        {loading ? 'Loading...' : 'Sign up'}
-                    </Text>
-                </Pressable>
-            </View>
+    if (signUpError) {
+      Alert.alert(signUpError.message);
+      setLoading(false);
+      return;
+    }
 
-        </ScrollView>
+    if (newUser) {
+      // 2. Create the profile in the database
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: newUser.id,
+        full_name: name,
+        username: null,
+        avatar_url: '', // Explicitly set to empty string, to be updated later
+        updated_at: new Date(),
+      });
+
+      if (profileError) {
+        console.error("Profile insertion error:", profileError);
+      }
+    }
+
+    Alert.alert(
+      'Success!',
+      'Account created successfully. Please check your inbox for verification.'
     );
-}
+    setLoading(false);
+  }
 
-// --- NEW REUSABLE INPUT COMPONENT ---
-interface InputFieldProps {
-    label: string;
-    value: string | undefined;
-    onChangeText?: (text: string) => void;
-    placeholder?: string;
-    secureTextEntry?: boolean;
-    autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-    disabled?: boolean;
-    iconName?: keyof typeof Ionicons.glyphMap; // Use Ionicons type for safe icon names
-}
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? '#000' : '#fff' },
+      ]}
+    >
+      <Pressable
+        style={styles.backArrow}
+        onPress={() => router.back()}
+        accessibilityLabel="Go back"
+      >
+        <FontAwesome6 name="arrow-left-long" size={24} color={isDark ? '#fff' : '#000'} />
+      </Pressable>
+      <Text
+        style={[
+          styles.title,
+          { color: isDark ? '#fff' : '#000' },
+        ]}
+      >
+        <Text style={styles.titleBold}>Sign up</Text> to Chatbox
+      </Text>
+      <Text
+        style={[
+          styles.subtitle,
+          { color: isDark ? '#999' : '#555' },
+        ]}
+      >
+        Create an account to continue
+      </Text>
 
-const InputField: React.FC<InputFieldProps> = ({ 
-    label, 
-    value, 
-    onChangeText, 
-    placeholder, 
-    secureTextEntry = false, 
-    autoCapitalize = 'sentences', 
-    disabled = false, 
-    iconName 
-}) => (
-    <View style={styles.verticallySpaced}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <View style={[styles.inputContainer, disabled && styles.inputDisabledContainer]}>
-            {iconName && <Ionicons name={iconName} size={20} color={disabled ? '#999' : '#666'} style={styles.icon} />}
-            <TextInput
-                onChangeText={onChangeText}
-                value={value}
-                placeholder={placeholder}
-                secureTextEntry={secureTextEntry}
-                autoCapitalize={autoCapitalize}
-                editable={!disabled}
-                style={[styles.textInput, disabled && styles.inputDisabledText]}
+      <View style={{ marginTop: 10 }}>
+        <TextInput
+          placeholder="Full name"
+          placeholderTextColor={isDark ? '#888' : '#777'}
+          value={name}
+          onChangeText={setName}
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#fff' : '#000',
+              borderBottomColor: isDark ? '#333' : '#ccc',
+            },
+          ]}
+        />
+        <TextInput
+          placeholder="Your email"
+          placeholderTextColor={isDark ? '#888' : '#777'}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#fff' : '#000',
+              borderBottomColor: isEmailInvalid ? ERROR_COLOR : (isDark ? '#333' : '#ccc'),
+              marginBottom: isEmailInvalid ? 8 : 24,
+            },
+          ]}
+        />
+        {isEmailInvalid && (
+          <Text style={styles.errorText}>Please enter a valid email address.</Text>
+        )}
+
+        <View style={[
+          styles.passwordInputContainer,
+          { borderBottomColor: isDark ? '#333' : '#ccc', marginTop: isEmailInvalid ? 16 : 0 }
+        ]}>
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor={isDark ? '#888' : '#777'}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            style={[styles.passwordInput, { color: isDark ? '#fff' : '#000' }]}
+          />
+          <Pressable onPress={() => setShowPassword(!showPassword)}>
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color={isDark ? '#888' : '#777'}
             />
+          </Pressable>
         </View>
+
+        <View style={[
+          styles.passwordInputContainer,
+          { borderBottomColor: passwordsDontMatch ? ERROR_COLOR : (isDark ? '#333' : '#ccc'), marginBottom: passwordsDontMatch ? 8 : 24 }
+        ]}>
+          <TextInput
+            placeholder="Confirm password"
+            placeholderTextColor={isDark ? '#888' : '#777'}
+            value={confirmPass}
+            onChangeText={setConfirmPass}
+            secureTextEntry={!showConfirmPass}
+            style={[styles.passwordInput, { color: isDark ? '#fff' : '#000' }]}
+          />
+          {/* CORRECTED: The onPress handler now correctly uses setShowConfirmPass */}
+          <Pressable onPress={() => setShowConfirmPass(!showConfirmPass)}>
+            <Ionicons
+              name={showConfirmPass ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color={isDark ? '#888' : '#777'}
+            />
+          </Pressable>
+        </View>
+        {passwordsDontMatch && (
+          <Text style={styles.errorText}>Passwords do not match.</Text>
+        )}
+
+        <Pressable
+          style={[
+            styles.button,
+            {
+              backgroundColor: buttonBgColor,
+              opacity: loading || !isFormValid ? 0.7 : 1,
+              marginTop: passwordsDontMatch ? 16 : 10,
+            },
+          ]}
+          onPress={handleSignUp}
+          disabled={loading || !isFormValid}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              { color: buttonTextColor },
+            ]}
+          >
+            {loading ? 'Loading...' : 'Sign Up'}
+          </Text>
+        </Pressable>
+
+        <Link
+          href="/login"
+          style={[
+            styles.altLink,
+            { color: isDark ? '#66C2A4' : '#006B5C' },
+          ]}
+        >
+          Already have an account? Log in
+        </Link>
+      </View>
     </View>
-);
-
-
-// ... (getProfile stub remains the same)
-function getProfile() {
-    throw new Error('Function not implemented.')
+  );
 }
-
-// --- NEW STYLES FOR NATIVE COMPONENTS ---
 
 const styles = StyleSheet.create({
-    container: {
-        marginTop: 40,
-        padding: 12,
-    },
-    verticallySpaced: {
-        paddingTop: 8,
-        paddingBottom: 8,
-        alignSelf: 'stretch',
-    },
-    mt20: {
-        marginTop: 20,
-    },
-    
-    // Input Styles
-    inputLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        color: '#333',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 4,
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
-    },
-    inputDisabledContainer: {
-        backgroundColor: '#f0f0f0', // Light gray background for disabled input
-    },
-    icon: {
-        marginRight: 10,
-    },
-    textInput: {
-        flex: 1,
-        height: 40,
-        fontSize: 16,
-        paddingVertical: 8,
-        color: '#333',
-    },
-    inputDisabledText: {
-        color: '#999', // Gray text color for disabled input
-    },
-
-    // Button Styles
-    button: {
-        backgroundColor: '#007BFF', // Standard blue button color
-        borderRadius: 4,
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 40,
-    },
-    buttonDisabled: {
-        backgroundColor: '#a0c7ff', // Lighter shade for disabled state
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 80,
+  },
+  backArrow: {
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '400',
+    marginBottom: 8,
+  },
+  titleBold: {
+    fontWeight: '700',
+    color: '#008C77',
+    textDecorationLine: 'underline',
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  input: {
+    borderBottomWidth: 1,
+    fontSize: 16,
+    paddingVertical: 10,
+    marginBottom: 24,
+  },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    paddingVertical: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingRight: 10,
+  },
+  button: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  altLink: {
+    textAlign: 'center',
+    marginTop: 24,
+    fontWeight: '500',
+  },
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  errorText: {
+    color: ERROR_COLOR,
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 10,
+    paddingLeft: 2,
+  }
 });

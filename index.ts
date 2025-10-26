@@ -7,6 +7,7 @@ import {
 import 'expo-router/entry';
 import { StreamChat } from 'stream-chat';
 import { supabase } from './src/lib/supabase';
+import { restoreSession } from './src/utils/sessionManager';
 import { setForegroundMessageHandler } from './src/utils/setForegroundMessageHandler';
 import { setNotifeeListeners } from './src/utils/setNotifeeListeners';
 import { setPushConfig } from './src/utils/setPushConfig';
@@ -23,23 +24,22 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
   }
 
   // Handle Stream Chat notifications
-  const {data: {session}} = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
-    console.log('No user session found. Cannot handle background message.');
-    return;
+    session = await restoreSession();
   }
 
   if (!process.env.EXPO_PUBLIC_STREAM_API_KEY) {
     throw new Error('EXPO_PUBLIC_STREAM_API_KEY is not defined');
   }
   const client = StreamChat.getInstance(process.env.EXPO_PUBLIC_STREAM_API_KEY);
-  
-  client._setToken(
-    {
-      id: session.user.id,
-    },
-    tokenProvider,
+
+  // ✅ Properly connect user
+  await client.connectUser(
+    { id: session.user.id },
+    tokenProvider
   );
+
 
 
   if (!remoteMessage.data?.id || typeof remoteMessage.data.id !== 'string') {

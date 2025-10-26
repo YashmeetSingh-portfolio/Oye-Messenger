@@ -54,7 +54,11 @@ export default function UserAvatar({ url, size = 50 }: Props) {
           style={[avatarSize, styles.image]}
         />
       ) : (
-        <View style={[avatarSize, styles.noImage]} />
+         <View style={[avatarSize, styles.avatarDummyContainer]}>
+                   <Image
+                                 source={require("../../assets/images/user.png")}
+                                 style={[avatarSize, styles.avatar]} />
+                   </View>
       )}
     </View>
   );
@@ -74,4 +78,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarDummyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffffff',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#7b7b7bff',
+    padding: 5,
+  },
+  avatar:{
+    
+  }
 });
