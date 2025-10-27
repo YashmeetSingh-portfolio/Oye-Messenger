@@ -88,7 +88,7 @@ export default function TabsNavigator(){
             />
 
             {/* --- Screen 3: Profile --- */}
-            <Tabs.Screen
+            {/* <Tabs.Screen
                 name='profile'
                 options={{
                     tabBarLabel: ({ focused }) => (
@@ -105,7 +105,7 @@ export default function TabsNavigator(){
                     ),
                     tabBarIcon: ({ focused, color, size }) => getTabBarIcon('profile', focused, color, size), // <-- ICON LOGIC HERE
                 }}
-            />
+            /> */}
         </Tabs>
     );
 }

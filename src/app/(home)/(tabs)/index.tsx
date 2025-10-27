@@ -3,7 +3,7 @@ import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/providers/AuthProvider';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import type { Channel } from 'stream-chat';
 import { ChannelList } from 'stream-chat-expo';
@@ -65,9 +65,10 @@ export default function MainTabScreen() {
 
                     </View>
                     <Text style={styles.title} >Home</Text>
-                   <View style={styles.avatarContainer}>
+                   <Pressable style={styles.avatarContainer}
+                   onPress={() => router.push("/profile")}>
                                            <AvatarDisplay size={46} url={avatarUrl} />
-                                       </View>
+                   </Pressable>
 
 
 
