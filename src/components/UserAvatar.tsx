@@ -53,13 +53,16 @@ export default function UserAvatar({ url, size = 50 }: Props) {
           accessibilityLabel="User Avatar"
           style={[avatarSize, styles.image]}
         />
-      ) : (
+      ) 
+      : 
+      (
          <View style={[avatarSize, styles.avatarDummyContainer]}>
                    <Image
                                  source={require("../../assets/images/user.png")}
                                  style={[avatarSize, styles.avatar]} />
                    </View>
-      )}
+      )
+      }
     </View>
   );
 }

@@ -63,6 +63,7 @@ export default function ProfileScreen() {
         full_name,
         updated_at: new Date(),
       };
+      
       const { error } = await supabase.from('profiles').upsert(updates);
       if (error) throw error;
     } catch (error) {

@@ -33,18 +33,37 @@ export default function ChannelScreen() {
         fetchChannel();
     }, [cid, me?.id]);
 
-    const joinCall = async() => {
+ const joinCall = async() => {
         
-        const members = Object.values(channel?.state.members).map(member => ({user_id: member.user.id}));
+        // 1. Get the channel members and ensure we have their full user data.
+        const membersFromChannel = Object.values(channel?.state.members || {});
+        
+        // 2. Map members to the required Stream Video format.
+        //    This format MUST include the 'user' object with 'name' to ensure proper display.
+        const members = membersFromChannel.map(member => ({
+            user_id: member.user.id,
+            // 💡 CRUCIAL FIX: Provide the full user object with the name.
+            user: {
+                id: member.user.id,
+                // Use the name from the channel state, falling back to ID if necessary
+                name: member.user.name || member.user.id, 
+                image: member.user.image,
+            }
+        }));
+
         const call = videoClient.call('default', Crypto.randomUUID());
+        
         await call.getOrCreate({
             ring: true,
             data:{
-                members:members,
+                // Send the structured members array to correctly sync user data to Stream Video
+                members: members, 
             },
         });
+        
+        // 3. Add navigation to the call screen here.
+        // router.push({ pathname: '/call', params: { callId: call.id } }); // Example
     }
-
     const CustomHeader = () => (
         <View style={styles.header}>
             <View style={styles.headerContent}>
@@ -58,7 +77,7 @@ export default function ChannelScreen() {
                     </TouchableOpacity>
                     <View style={styles.ChannelDetails}>
                         <View style={styles.avatarStatusWrapper}>
-                            <UserAvatar url={otherUser?.avatar_url} size={44} />
+                            <UserAvatar url={otherUser?.image} size={44} />
                             <View style={[styles.statusDot, { backgroundColor: isOnline ? '#4cd137' : '#b2bec3' }]} />
                         </View>
                         <View style={styles.nameAndStatusWrapper}>
@@ -67,7 +86,7 @@ export default function ChannelScreen() {
                                 numberOfLines={1} // 👈 Enforce single line
                                 ellipsizeMode='tail' // 👈 Truncate with "..."
                             >
-                                {otherUser?.full_name || otherUser?.name || 'Chat'}
+                                { otherUser?.name || 'Chat'}
                             </Text>
                             <Text style={styles.statusText}>
                                 {isOnline ? 'Active now' : 'Offline'}
