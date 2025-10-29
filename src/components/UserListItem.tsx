@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useChatContext } from 'stream-chat-expo';
 import { useAuth } from '../providers/AuthProvider';
 import UserAvatar from './UserAvatar';
@@ -11,9 +11,16 @@ type User = {
   avatar_url?: string | null;
 };
 
-const UserListItem = ({ user }: { user: User }) => {
+type Props = {
+  user: User;
+  forceLight?: boolean; // 👈 NEW optional prop
+};
+
+const UserListItem = ({ user, forceLight = false }: Props) => {
   const { user: me } = useAuth();
   const { client } = useChatContext();
+  const colorScheme = useColorScheme();
+  const isDark = !forceLight && colorScheme === 'dark'; // 👈 respect prop
 
   const onPress = async () => {
     const channel = client.channel('messaging', {
@@ -24,36 +31,48 @@ const UserListItem = ({ user }: { user: User }) => {
   };
 
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <TouchableOpacity
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? '#000' : '#fff',
+          borderBottomColor: isDark ? '#222' : '#e0e0e0',
+        },
+      ]}
+      onPress={onPress}
+    >
       <UserAvatar url={user.avatar_url} size={40} />
       <View style={styles.textContainer}>
-        <Text style={styles.fullNameText} numberOfLines={1}>
+        <Text
+          style={[
+            styles.fullNameText,
+            { color: isDark ? '#fff' : '#222' },
+          ]}
+          numberOfLines={1}
+        >
           {user.full_name}
         </Text>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 10,  // smaller vertical padding
+    paddingVertical: 10,
     paddingHorizontal: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
   },
   textContainer: {
-    marginLeft: 10, // smaller gap between avatar and name
+    marginLeft: 10,
     flex: 1,
     justifyContent: 'center',
   },
   fullNameText: {
     fontWeight: '500',
     fontSize: 15,
-    color: '#222',
   },
 });
 

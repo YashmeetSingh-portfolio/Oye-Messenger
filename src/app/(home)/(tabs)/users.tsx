@@ -4,7 +4,7 @@ import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/providers/AuthProvider';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 type Profile = {
@@ -19,6 +19,7 @@ export default function UsersScreen() {
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<Profile[]>([]);
     const [avatarUrl, setAvatarUrl] = useState('');
+
 
     const MyRectangleSvg = `
   <svg width="30" height="3" viewBox="0 0 30 3" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,17 +68,21 @@ export default function UsersScreen() {
             {/* Header Section */}
             <View style={styles.container}>
                 <View style={styles.headerContainer}>
-                    <View style={styles.searchIconContainer}>
+                    <TouchableOpacity
+                        style={styles.searchIconContainer}
+                        onPress={() => router.push('/searchUsers')}
+                    >
                         <Image
                             source={require('../../../../assets/images/SearchIcon.png')}
                             style={styles.SearchIcon}
                         />
-                    </View>
+                    </TouchableOpacity>
+
                     <Text style={styles.title}>Users</Text>
-                    <Pressable style={styles.avatarContainer}
-                                       onPress={() => router.push("/profile")}>
+                    <TouchableOpacity style={styles.avatarContainer}
+                        onPress={() => router.push("/profile")}>
                         <AvatarDisplay size={46} url={avatarUrl} />
-                    </Pressable>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -89,9 +94,9 @@ export default function UsersScreen() {
 
                 <FlatList
                     data={users}
-                    
+
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => <UserListItem user={item} />}
+                    renderItem={({ item }) => <UserListItem user={item} forceLight />}
                     contentContainerStyle={{
                         paddingBottom: 20,
                     }}

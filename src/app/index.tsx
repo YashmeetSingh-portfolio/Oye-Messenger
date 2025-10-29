@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 export default function ModalScreen() {
    
   return (
-  <Redirect href="/(auth)/" />
+  <Redirect href="/(auth)" />
   );
 }
 

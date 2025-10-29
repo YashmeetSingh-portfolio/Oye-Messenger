@@ -68,24 +68,33 @@ export default function ChatProvider({ children }: PropsWithChildren) {
         return <ActivityIndicator />;
     }
 
-    return (
-        <OverlayProvider
-            value={{
-                style: {
-                   
-                    channelPreview: {
-                        container: {
-                            backgroundColor: 'white', // ✅ white preview
-                            borderBottomWidth: 0, // ✅ remove divider
-                        },
-                    },
-                },
-            }}
-        >
-            <Chat client={client}>
-                
-                {children}
-            </Chat>
-        </OverlayProvider>
-    );
+  return (
+  <OverlayProvider
+    value={{
+      style: {
+        channelList: {
+          selectChannel: { backgroundColor: "white" },
+          container:{backgroundColor:"white"}
+        },
+        channelPreview: {
+          container: {
+            backgroundColor: "transparent",
+            borderBottomWidth: 0,
+          },
+        },
+        channel: {
+          backgroundColor: "transparent",
+        },
+        messageList: {
+          container: {
+            backgroundColor: "transparent",
+          },
+        },
+      },
+    }}
+  >
+    <Chat client={client}>{children}</Chat>
+  </OverlayProvider>
+);
+
 }

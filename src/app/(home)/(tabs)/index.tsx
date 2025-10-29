@@ -3,7 +3,7 @@ import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/providers/AuthProvider';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import type { Channel } from 'stream-chat';
 import { ChannelList } from 'stream-chat-expo';
@@ -17,7 +17,7 @@ export default function MainTabScreen() {
     const [channel, setChannel] = useState<Channel | null>(null);
     const { user } = useAuth();
     const [avatarUrl, setAvatarUrl] = useState(null);
-    
+
     const MyRectangleSvg = `
 <svg width="30" height="3" viewBox="0 0 30 3" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="30" height="3" rx="1.5" fill="#E6E6E6"/>
@@ -25,50 +25,52 @@ export default function MainTabScreen() {
 `;
 
 
-   async function getProfile() {
-          try {
-              setLoading(true);
-              if (!session?.user) throw new Error('No user on the session!');
-  
-              const { data, error, status } = await supabase
-                  .from('profiles')
-                  .select(`avatar_url`)
-                  .eq('id', session?.user.id)
-                  .single();
-  
-              if (error && status !== 406) throw error;
-              if (data) setAvatarUrl(data.avatar_url);
-          } catch (error) {
-              if (error instanceof Error) Alert.alert(error.message);
-          } finally {
-              setLoading(false);
-          }
-      }
-  
-      useEffect(() => {
-          if (session) getProfile();
-      }, [session]);
-  
- 
+    async function getProfile() {
+        try {
+            setLoading(true);
+            if (!session?.user) throw new Error('No user on the session!');
+
+            const { data, error, status } = await supabase
+                .from('profiles')
+                .select(`avatar_url`)
+                .eq('id', session?.user.id)
+                .single();
+
+            if (error && status !== 406) throw error;
+            if (data) setAvatarUrl(data.avatar_url);
+        } catch (error) {
+            if (error instanceof Error) Alert.alert(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        if (session) getProfile();
+    }, [session]);
+
+
 
     return (
         <View style={styles.screen}>
-          
+
             <View style={styles.container}>
                 <View style={styles.headerContainer}>
-                    <View style={styles.searchIconContainer}>
+                    <TouchableOpacity
+                        style={styles.searchIconContainer}
+                        onPress={() => router.push("/search")}
+                    >
                         <Image
-
-                            source={require('../../../../assets/images/SearchIcon.png')}
+                            source={require("../../../../assets/images/SearchIcon.png")}
                             style={styles.SearchIcon}
                         />
+                    </TouchableOpacity>
 
-                    </View>
                     <Text style={styles.title} >Home</Text>
-                   <Pressable style={styles.avatarContainer}
-                   onPress={() => router.push("/profile")}>
-                                           <AvatarDisplay size={46} url={avatarUrl} />
-                   </Pressable>
+                    <TouchableOpacity style={styles.avatarContainer}
+                        onPress={() => router.push("/profile")}>
+                        <AvatarDisplay size={46} url={avatarUrl} />
+                    </TouchableOpacity>
 
 
 
@@ -78,7 +80,7 @@ export default function MainTabScreen() {
 
 
 
-              
+
             </View>
             <View style={styles.chatListContainer}>
                 <View style={styles.barContainer}>      <SvgXml xml={MyRectangleSvg} />
@@ -161,8 +163,8 @@ const styles = StyleSheet.create({
     barContainer: {
         alignItems: 'center',
         marginBottom: 20,
-       
-        
+
+
     },
 
 

@@ -1,22 +1,45 @@
-import UserAvatar from '@/src/components/UserAvatar';
-import { useAuth } from '@/src/providers/AuthProvider';
-import { Ionicons } from '@expo/vector-icons';
-import { useStreamVideoClient } from '@stream-io/video-react-native-sdk';
-import * as Crypto from 'expo-crypto';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Channel as ChannelType } from 'stream-chat';
-import { Channel, MessageInput, MessageList, useChatContext } from 'stream-chat-expo';
-
+import UserAvatar from "@/src/components/UserAvatar";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
+import * as Crypto from "expo-crypto";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useColorScheme,
+    View,
+} from "react-native";
+import { useMMKVObject } from "react-native-mmkv";
+import { Channel as ChannelType } from "stream-chat";
+import {
+    Channel,
+    MessageInput,
+    MessageList,
+    ThemeProvider,
+    useChatContext,
+    useMessageComposerHasSendableData,
+    useMessageInputContext,
+} from "stream-chat-expo";
 export default function ChannelScreen() {
     const [channel, setChannel] = useState<ChannelType | null>(null);
     const [otherUser, setOtherUser] = useState<any>(null);
     const [isOnline, setIsOnline] = useState<boolean>(false);
-    const { cid } = useLocalSearchParams<{cid: string}>();
+    const { cid } = useLocalSearchParams<{ cid: string }>();
     const { client } = useChatContext();
     const { user: me } = useAuth();
     const videoClient = useStreamVideoClient();
+    const [globalPrefs] = useMMKVObject<{ imageUri?: string }>("global_wallpaper");
+    const colorScheme = useColorScheme();
+
+    const handleMenuOnPress = () => router.push("/(home)/WallpaperOverviewScreen");
 
     useEffect(() => {
         const fetchChannel = async () => {
@@ -32,197 +55,286 @@ export default function ChannelScreen() {
         };
         fetchChannel();
     }, [cid, me?.id]);
+    const CustomSendButton = () => {
+        // Use useMessageInputContext only for the sendMessage function
+        const { sendMessage } = useMessageInputContext();
 
- const joinCall = async() => {
-        
-        // 1. Get the channel members and ensure we have their full user data.
+        // Use the dedicated hook to check if there is any text or attachment to send
+        const hasSendableData = useMessageComposerHasSendableData();
+        const isDisabled = !hasSendableData;
+
+        return (
+            <TouchableOpacity
+                onPress={() => {
+                    if (!isDisabled) {
+                        sendMessage();
+                    }
+                }}
+                // Disable the button based on the hook's return value
+                disabled={isDisabled}
+                style={[
+                    styles.button,
+
+                ]}
+            >
+                <Ionicons name="send" size={30} color={isDisabled ? 'gray' : 'green'} />
+            </TouchableOpacity>
+        );
+    };
+
+
+    const joinCall = async () => {
         const membersFromChannel = Object.values(channel?.state.members || {});
-        
-        // 2. Map members to the required Stream Video format.
-        //    This format MUST include the 'user' object with 'name' to ensure proper display.
-        const members = membersFromChannel.map(member => ({
-            user_id: member.user.id,
-            // 💡 CRUCIAL FIX: Provide the full user object with the name.
-            user: {
-                id: member.user.id,
-                // Use the name from the channel state, falling back to ID if necessary
-                name: member.user.name || member.user.id, 
-                image: member.user.image,
-            }
-        }));
+        const members = membersFromChannel
+            .filter((m) => m.user?.id)
+            .map((m) => ({
+                user_id: m.user!.id,
+                user: {
+                    id: m.user!.id,
+                    name: m.user!.name || m.user!.id,
+                    image: m.user?.image || undefined,
+                },
+            }));
+        const call = videoClient?.call("default", Crypto.randomUUID());
+        await call?.getOrCreate({ ring: true, data: { members } });
+    };
 
-        const call = videoClient.call('default', Crypto.randomUUID());
-        
-        await call.getOrCreate({
-            ring: true,
-            data:{
-                // Send the structured members array to correctly sync user data to Stream Video
-                members: members, 
+    if (!channel) return <ActivityIndicator style={{ flex: 1 }} />;
+
+    const isDark = colorScheme === "dark";
+    const wallpaperUri = globalPrefs?.imageUri ?? null;
+
+    // ✅ Stream Chat custom theme
+    const theme = {
+        colors: {
+            primary: isDark ? "#1E90FF" : "#007AFF",
+            background: "transparent",
+            text: isDark ? "#f9f9f9" : "#000000ff",
+            overlay: "transparent",
+        },
+        messageList: { container: { backgroundColor: "transparent" } },
+        messageInput: {
+            container: {
+                backgroundColor: isDark ? '#00000027' : "#ffffff2a",
+
+                padding: 8,
+                borderRadius: 15,
+                margin: 10,
+                marginBottom: 30,
+                marginTop: 0,
+
+
             },
-        });
-        
-        // 3. Add navigation to the call screen here.
-        // router.push({ pathname: '/call', params: { callId: call.id } }); // Example
-    }
-    const CustomHeader = () => (
-        <View style={styles.header}>
-            <View style={styles.headerContent}>
-                {/* Header Left: Takes up most space and contains the user details */}
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity 
-                        style={styles.backButton}
-                        onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                    <View style={styles.ChannelDetails}>
-                        <View style={styles.avatarStatusWrapper}>
-                            <UserAvatar url={otherUser?.image} size={44} />
-                            <View style={[styles.statusDot, { backgroundColor: isOnline ? '#4cd137' : '#b2bec3' }]} />
-                        </View>
-                        <View style={styles.nameAndStatusWrapper}>
-                            <Text 
-                                style={styles.headerTitle}
-                                numberOfLines={1} // 👈 Enforce single line
-                                ellipsizeMode='tail' // 👈 Truncate with "..."
-                            >
-                                { otherUser?.name || 'Chat'}
-                            </Text>
-                            <Text style={styles.statusText}>
-                                {isOnline ? 'Active now' : 'Offline'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-                {/* Header Right: Fixed size for the call button */}
-                <View style={styles.headerRight}>
-                    <Ionicons name="call" size={24} color="gray" style={{ marginRight: 20 }} onPress={joinCall}/>
-                </View>
-            </View>
-        </View>
-    );
 
-    if (!channel) {
-        return <ActivityIndicator />;
-    }
+            inputBox: {
+                backgroundColor: isDark ? "#2A2A2A" : "#fff",
+                borderRadius: 12,
+                border: 'none',
+                color: isDark ? "#fff" : "#000",
+                margin: -2
+            },
+
+
+        },
+        messageSimple: {
+            content: {
+                container: {
+                    borderWidth: 0,
+                },
+                text: {
+                    color: '#FFFFFF', // Set text color for all messages
+                },
+            },
+            messageUser: {
+                // Sent message bubble styling
+                content: {
+                    container: {
+                        backgroundColor: '#007AFF', // iOS blue for the bubble background
+                    },
+                },
+            },
+            messageOther: {
+                // Received message bubble styling
+                content: {
+                    container: {
+                        backgroundColor: '#ff0000ff', // Light gray for the bubble background
+                    },
+                    text: {
+                        color: '#ffffffff', // Black text for received messages
+                    },
+                },
+            },
+        },
+    };
+
+    const backgroundStyle = wallpaperUri
+        ? { uri: wallpaperUri }
+        : undefined;
 
     return (
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <CustomHeader />
+        <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View
+                style={[
+                    styles.headerContainer,
+                    {
+                        backgroundColor: isDark
+                            ? "rgba(0, 0, 0, 1)"
+                            : "rgba(255,255,255,0.85)",
+                        borderBottomColor: isDark ? "#000000ff" : "#eee",
+                    },
+                ]}
+            >
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#000"} />
+                </TouchableOpacity>
+
+                <View style={styles.userInfo}>
+                    <View style={{ position: "relative" }}>
+                        <UserAvatar url={otherUser?.image} size={44} />
+                        <View
+                            style={[
+                                styles.statusDot,
+                                { backgroundColor: isOnline ? "#4cd137" : "#666" },
+                            ]}
+                        />
+                    </View>
+
+                    <View style={{ marginLeft: 10 }}>
+                        <Text
+                            numberOfLines={1}
+                            style={[styles.userName, { color: isDark ? "#fff" : "#000" }]}
+                        >
+                            {otherUser?.name || "Chat"}
+                        </Text>
+                        <Text style={[styles.statusText, { color: "#999" }]}>
+                            {isOnline ? "Active now" : "Offline"}
+                        </Text>
+                    </View>
+                </View>
+
+                <TouchableOpacity onPress={joinCall}>
+                    <Ionicons name="call" size={24} color={isDark ? "#aaa" : "#555"} />
+                </TouchableOpacity>
+            </View>
+
+            {/* Chat Section */}
             <View style={{ flex: 1 }}>
-                <Channel 
-                    channel={channel}
-                >
-                    <KeyboardAvoidingView
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        keyboardVerticalOffset={124}
-                    >
-                        <View style={styles.chatContainer}>
-                            <MessageList />
-                            <MessageInput />
-                        </View>
-                    </KeyboardAvoidingView>
-                </Channel>
+                <ThemeProvider style={theme}>
+                    <Channel channel={channel}>
+                        <KeyboardAvoidingView
+                            style={{ flex: 1 }}
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            keyboardVerticalOffset={85}
+                        >
+                            {backgroundStyle ? (
+                                <ImageBackground
+                                    source={backgroundStyle}
+                                    style={styles.wallpaper}
+                                    resizeMode="cover"
+                                >
+                                    <View style={getOverlayStyle(isDark)} />
+                                    <View style={styles.chatWrapper}>
+                                        <MessageList />
+                                        <MessageInput SendButton={CustomSendButton} />
+                                    </View>
+                                </ImageBackground>
+                            ) : (
+                                <ImageBackground
+                                    source={{
+                                        uri: isDark
+                                            ? 'https://images.unsplash.com/photo-1614292264554-7dca1d6466d6?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZGFyayUyMGJhY2tncm91bmR8ZW58MHwxfDB8fHwy&auto=format&fit=crop&q=60&w=600'
+                                            : 'https://images.unsplash.com/vector-1754119394220-6d2d7a441284?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGxpZ2h0JTIwd2FsbHBhcGVyfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600'
+                                    }}
+                                    style={styles.wallpaper}
+                                    resizeMode="cover"
+                                >
+                                    <View style={styles.chatWrapper}>
+                                        <MessageList />
+                                        <MessageInput SendButton={CustomSendButton} />
+                                    </View>
+                                </ImageBackground>
+                            )}
+
+                            <Pressable style={styles.wallpaperButton} onPress={handleMenuOnPress}>
+                                <Ionicons name="color-palette" size={22} color="#fff" />
+                            </Pressable>
+                        </KeyboardAvoidingView>
+                    </Channel>
+                </ThemeProvider>
             </View>
         </View>
     );
 }
 
+// ✅ Overlay tint
+export const getOverlayStyle = (isDark: boolean) => ({
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: isDark
+        ? "rgba(0,0,0,0.25)"
+        : "rgba(255,255,255,0.1)",
+    zIndex: -1,
+});
+
 const styles = StyleSheet.create({
-    
-    headerContent:{
-        // ❌ Removed fixed width: width: 387,
-        flex: 1, // 👈 Added flex: 1 for responsiveness
-        height: 44,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    headerContainer: {
+        height: 120,
+        paddingTop: 50,
+        paddingHorizontal: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottomWidth: 1,
     },
-    ChannelDetails:{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        // Make ChannelDetails flexible to push name truncation
-        flex: 1, 
-        overflow: 'hidden', // Needed for text truncation within flexible view
+    button: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 5
     },
-    avatarStatusWrapper: {
-        position: 'relative',
-        // ❌ Removed redundant marginRight: 10 as it's handled by gap: 10 on ChannelDetails
-        justifyContent: 'center',
-        alignItems: 'center',
+    buttonText: {
+        color: 'white'
     },
-    nameAndStatusWrapper: {
-        // 👈 New style to ensure the name section is flexible
+
+    backButton: { padding: 8 },
+    userInfo: {
+        flexDirection: "row",
+        alignItems: "center",
         flex: 1,
-        overflow: 'hidden',
+        marginLeft: 10,
+    },
+    userName: {
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    statusText: {
+        fontSize: 13,
+        marginTop: 2,
     },
     statusDot: {
-        position: 'absolute',
+        position: "absolute",
         bottom: 2,
         right: -2,
         width: 12,
         height: 12,
         borderRadius: 6,
         borderWidth: 2,
-        borderColor: '#fff',
-        zIndex: 2,
+        borderColor: "#000",
     },
-    statusText: {
-        fontSize: 13,
-        color: '#888',
-        marginLeft: 3, // Changed from 5 to 3 to align better with title
-        marginTop: 2,
+    wallpaper: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: -1,
     },
-    headerLeft:{
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1, // 👈 Ensures headerLeft takes up all available horizontal space
-        // ❌ Removed fixed width: width: '60%',
-        overflow: 'hidden', // Ensures content inside doesn't spill over
-    },
-    headerRight:{
-        // No changes needed here, as headerLeft will take up the rest of the space
-    },
-
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center', // Changed to center to ensure headerContent is centered
-        paddingHorizontal: 16,
-        paddingTop: 60,
-        paddingBottom: 16,
-        backgroundColor: 'white',
-        height: 124,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ffffffff',
-        // boxShadow property for web/iOS - typically handled by elevation/shadow properties on RN mobile
-    },
-    AvatarFrame:{
-        width:44,
-        height:44,
-        borderRadius:22,
-        backgroundColor:'#ccc',
-        marginRight:10,
-    },
-    backButton: {
-        padding: 8,
-        marginRight: 10, // Adjusted for better spacing
-    },
-    headerTitle: {
-        color: 'black',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginLeft: 3, // Adjusted from 3 for consistency
-        // Note: Truncation props are applied directly in the component (numberOfLines, ellipsizeMode)
-    },
-    placeholder: {
-        // Not needed anymore since headerRight is fixed and headerContent uses space-between
-        width: 0, 
-    },
-    chatContainer: {
+    chatWrapper: {
         flex: 1,
-        backgroundColor: 'red',
+        zIndex: 1,
+    },
+    wallpaperButton: {
+        position: "absolute",
+        top: 18,
+        right: 16,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        padding: 10,
+        borderRadius: 50,
+        zIndex: 10,
     },
 });

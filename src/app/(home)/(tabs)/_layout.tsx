@@ -16,13 +16,15 @@ export default function TabsNavigator(){
         const iconColor = focused ? ACTIVE_COLOR : INACTIVE_COLOR;
         
         // Use a suitable icon from Ionicons (or any other icon library you prefer)
-        let iconName;
+        let iconName: "message" | "user-add" | "setting";
         if (name === 'index') {
-            iconName = focused ? 'message' : 'message';
+            iconName = 'message';
         } else if (name === 'users') {
-            iconName = focused ? 'user-add' : 'user-add';
-        } else if (name === 'profile') {
-            iconName = focused ? 'setting' : 'setting';
+            iconName = 'user-add';
+        } else if (name === 'settings') {
+            iconName = 'setting';
+        } else {
+            iconName = 'message'; // fallback to a default icon
         }
         
         // Pass a larger, fixed size for bigger icons
@@ -44,6 +46,10 @@ export default function TabsNavigator(){
                     justifyContent: 'center', 
                     alignItems: 'center',
                 },
+                  animation: 'shift',
+                  
+                  
+               
             }}
         >
 
@@ -88,8 +94,8 @@ export default function TabsNavigator(){
             />
 
             {/* --- Screen 3: Profile --- */}
-            {/* <Tabs.Screen
-                name='profile'
+            <Tabs.Screen
+                name='settings'
                 options={{
                     tabBarLabel: ({ focused }) => (
                         <Text 
@@ -103,9 +109,9 @@ export default function TabsNavigator(){
                             Settings
                         </Text>
                     ),
-                    tabBarIcon: ({ focused, color, size }) => getTabBarIcon('profile', focused, color, size), // <-- ICON LOGIC HERE
+                    tabBarIcon: ({ focused, color, size }) => getTabBarIcon('settings', focused, color, size), // <-- ICON LOGIC HERE
                 }}
-            /> */}
+            />
         </Tabs>
     );
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994156628995",
+    "project_id": "oyemessenger",
+    "storage_bucket": "oyemessenger.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994156628995:android:7ff6eb7c348d4b8dd35236",
+        "android_client_info": {
+          "package_name": "com.devyashmeet.OYE"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4XuZBJLoAlQVaRw-39-FAxtxKS8eeIjE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
